@@ -69,8 +69,9 @@ jobs:
         shell: pwsh
         working-directory: .\swoole-src
         run: |
+          $deps = $env:DEPS_LIST -split ','
           .\.github\workflows\winext\deps.ps1 `
-            $env:DEPS_LIST `
+            $deps `
             -ToolsPath $env:TOOLS_PATH `
             -PhpVer $env:PHP_VERSION `
             -PhpTs $false `
