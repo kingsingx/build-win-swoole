@@ -50,6 +50,10 @@ jobs:
           $plain = $plain -replace 'return VCWD_STAT\(url, &ssb->sb\);', 'return VCWD_STAT(url, (php_win32_ioutil_stat_t *) &ssb->sb);'
           Set-Content .\thirdparty\php\streams\plain_wrapper.c $plain -Encoding UTF8
 
+          $iocp = Get-Content .\src\coroutine\iocp.cc -Raw
+          $iocp = $iocp -replace '#include "win32/ioutil.h"', "#ifdef __cplusplus`r`nextern `"C`" {`r`n#endif`r`n#include `"win32/ioutil.h`"`r`n#ifdef __cplusplus`r`n}`r`n#endif"
+          Set-Content .\src\coroutine\iocp.cc $iocp -Encoding UTF8
+
       - name: Setup PHP 8.5 NTS
         uses: shivammathur/setup-php@v2
         with:
