@@ -5,7 +5,7 @@ This is the final one-click remote build workflow for:
 - PHP `8.5`
 - `x64`
 - `NTS`
-- Swoole `win32-ci`
+- Swoole `win32-event`
 - GitHub-hosted `windows-2022` runner
 
 Workflow file:
@@ -16,7 +16,7 @@ Workflow file:
 
 1. Uses `php/php-windows-builder/extension@v1`
 2. Fetches `https://github.com/swoole/swoole-src`
-3. Builds ref `win32-ci`
+3. Builds ref `win32-event`
 4. Builds `php_swoole.dll` for `PHP 8.5 / x64 / NTS`
 5. Uploads the build artifact automatically
 6. Optionally uploads assets to a GitHub release when triggered by a release event or matching tag
@@ -45,5 +45,5 @@ Workflow file:
 ## Important notes
 
 - This workflow is for the Windows native Swoole branch, not the mainstream Linux-first build path.
-- The build still depends on the current compatibility state of `swoole-src` branch `win32-ci` with PHP `8.5`.
+- The build still depends on the current compatibility state of `swoole-src` branch `win32-event` with PHP `8.5`.
 - If you later need a TS build, create a separate workflow instead of mixing NTS and TS flags in one file.
