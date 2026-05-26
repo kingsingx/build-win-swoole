@@ -46,8 +46,8 @@ jobs:
           }
 
           $plain = Get-Content .\thirdparty\php\streams\plain_wrapper.c -Raw
-          $plain = $plain -replace 'return VCWD_LSTAT\(url, &ssb->sb\);', 'return VCWD_LSTAT(url, (struct stat *) &ssb->sb);'
-          $plain = $plain -replace 'return VCWD_STAT\(url, &ssb->sb\);', 'return VCWD_STAT(url, (struct stat *) &ssb->sb);'
+          $plain = $plain -replace 'return VCWD_LSTAT\(url, &ssb->sb\);', 'return VCWD_LSTAT(url, (php_win32_ioutil_stat_t *) &ssb->sb);'
+          $plain = $plain -replace 'return VCWD_STAT\(url, &ssb->sb\);', 'return VCWD_STAT(url, (php_win32_ioutil_stat_t *) &ssb->sb);'
           Set-Content .\thirdparty\php\streams\plain_wrapper.c $plain -Encoding UTF8
 
       - name: Setup PHP 8.5 NTS
