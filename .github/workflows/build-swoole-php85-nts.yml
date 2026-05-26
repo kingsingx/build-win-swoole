@@ -35,6 +35,21 @@ jobs:
             throw "config.w32 not found in swoole-src after clone"
           }
 
+      - name: Apply PHP 8.5 compatibility patches
+        shell: pwsh
+        working-directory: .\swoole-src
+        run: |
+          $config = Get-Content .\config.w32 -Raw
+          if ($config -notmatch '/std:c\+\+20') {
+            $config = $config -replace 'ADD_FLAG\("CFLAGS_SWOOLE", "/D SW_USE_POLL=1"\);', "ADD_FLAG(`"CFLAGS_SWOOLE`", `"/D SW_USE_POLL=1`");`r`n`tADD_FLAG(`"CFLAGS_SWOOLE`", `"/std:c++20`");"
+            Set-Content .\config.w32 $config -Encoding UTF8
+          }
+
+          $plain = Get-Content .\thirdparty\php\streams\plain_wrapper.c -Raw
+          $plain = $plain -replace 'return VCWD_LSTAT\(url, &ssb->sb\);', 'return VCWD_LSTAT(url, (struct stat *) &ssb->sb);'
+          $plain = $plain -replace 'return VCWD_STAT\(url, &ssb->sb\);', 'return VCWD_STAT(url, (struct stat *) &ssb->sb);'
+          Set-Content .\thirdparty\php\streams\plain_wrapper.c $plain -Encoding UTF8
+
       - name: Setup PHP 8.5 NTS
         uses: shivammathur/setup-php@v2
         with:
