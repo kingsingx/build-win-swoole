@@ -18,25 +18,105 @@ jobs:
   build:
     name: Build php_swoole.dll
     runs-on: windows-2022
+    env:
+      TOOLS_PATH: C:\tools\phpdev
+      PHP_VERSION: "8.5"
+      PHP_TS: "nts"
+      PHP_ARCH: "x64"
+      SWOOLE_REF: "win32-event"
+      DEPS_LIST: "openssl,libcurl,libssh2,zlib,nghttp2,libzstd,brotli"
+
     steps:
       - name: Clone Swoole win32-event source
         shell: pwsh
         run: |
-          git clone --depth 1 --branch win32-event https://github.com/swoole/swoole-src.git swoole-src
+          git clone --depth 1 --branch $env:SWOOLE_REF https://github.com/swoole/swoole-src.git swoole-src
           if (-not (Test-Path ".\swoole-src\config.w32")) {
             throw "config.w32 not found in swoole-src after clone"
           }
 
-      - name: Build Swoole extension
-        uses: php/php-windows-builder/extension@v1
+      - name: Setup PHP 8.5 NTS
+        uses: shivammathur/setup-php@v2
         with:
           php-version: "8.5"
-          arch: x64
-          ts: nts
-          args: --enable-swoole --enable-swoole-curl
-          libs: openssl,libcurl,libssh2,zlib,nghttp2,libzstd,brotli
-          run-tests: "false"
-          build-directory: swoole-src
+          coverage: none
+          extensions: curl,openssl,pdo
+        env:
+          phpts: nts
+
+      - name: Cache PHP deps and devpack
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\tools\phpdev\deps
+            C:\tools\phpdev\php-*-devel-*-*
+          key: php85-${{ runner.os }}-nts-v1
+          restore-keys: |
+            php85-${{ runner.os }}-nts-
+            php85-${{ runner.os }}-
+
+      - name: Prepare php-sdk-binary-tools
+        shell: cmd
+        run: |
+          IF NOT EXIST %TOOLS_PATH% MKDIR %TOOLS_PATH%
+          IF NOT EXIST %TOOLS_PATH%\php-sdk-binary-tools (
+            git clone --depth 1 https://github.com/php/php-sdk-binary-tools %TOOLS_PATH%\php-sdk-binary-tools || EXIT /B 1
+          ) ELSE (
+            git --git-dir=%TOOLS_PATH%\php-sdk-binary-tools\.git --work-tree=%TOOLS_PATH%\php-sdk-binary-tools pull || EXIT /B 1
+          )
+
+      - name: Download Windows deps
+        shell: pwsh
+        working-directory: .\swoole-src
+        run: |
+          .\.github\workflows\winext\deps.ps1 `
+            $env:DEPS_LIST `
+            -ToolsPath $env:TOOLS_PATH `
+            -PhpVer $env:PHP_VERSION `
+            -PhpTs $false `
+            -PhpArch $env:PHP_ARCH `
+            -PhpVCVer vs17 `
+            -Staging $true
+
+      - name: Download PHP devel pack
+        shell: pwsh
+        working-directory: .\swoole-src
+        run: |
+          .\.github\workflows\winext\devpack_master.ps1 `
+            -ToolsPath $env:TOOLS_PATH `
+            -PhpTs $false `
+            -PhpArch $env:PHP_ARCH `
+            -PhpVCVer vs17
+
+      - name: Build Swoole extension
+        shell: cmd /c %TOOLS_PATH%\env.bat {0}
+        working-directory: .\swoole-src
+        env:
+          UNIX_COLOR: "1"
+          FIX_PICKLE: "1"
+        run: |
+          powershell .\.github\workflows\winext\build.ps1 ^
+            -ExtPath . ^
+            -ToolsPath %TOOLS_PATH% ^
+            -ExtName swoole ^
+            --enable-swoole-curl || EXIT /B 1
+
+      - name: Collect artifacts
+        shell: pwsh
+        working-directory: .\swoole-src
+        run: |
+          New-Item -ItemType Directory -Force -Path ..\artifacts | Out-Null
+          Copy-Item .\x64\Release\php_swoole.dll ..\artifacts\ -Force
+          if (Test-Path .\x64\Release\php_swoole.pdb) {
+            Copy-Item .\x64\Release\php_swoole.pdb ..\artifacts\ -Force
+          }
+          Get-ChildItem ..\artifacts | Select-Object Name, Length
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: php_swoole-php85-x64-nts
+          path: artifacts/*
 
   release:
     name: Upload release assets

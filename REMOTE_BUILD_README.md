@@ -7,6 +7,7 @@ This is the final one-click remote build workflow for:
 - `NTS`
 - Swoole `win32-event`
 - GitHub-hosted `windows-2022` runner
+- Hand-written Windows build steps using Swoole's own `winext` scripts
 
 Workflow file:
 
@@ -14,11 +15,11 @@ Workflow file:
 
 ## What it does
 
-1. Uses `php/php-windows-builder/extension@v1`
-2. Fetches `https://github.com/swoole/swoole-src`
-3. Builds ref `win32-event`
-4. Builds `php_swoole.dll` for `PHP 8.5 / x64 / NTS`
-5. Uploads the build artifact automatically
+1. Clones `swoole/swoole-src` branch `win32-event`
+2. Sets up `PHP 8.5 / NTS`
+3. Downloads Windows deps and PHP devel pack using Swoole's `winext` scripts
+4. Runs the native Windows extension build script directly
+5. Uploads `php_swoole.dll` as a workflow artifact
 6. Optionally uploads assets to a GitHub release when triggered by a release event or matching tag
 
 ## How to use it
@@ -38,9 +39,9 @@ Workflow file:
 
 ## Why this version is cleaner
 
-- It uses the official `php/php-windows-builder` action instead of manually scripting the Windows toolchain.
 - It is already pinned to `PHP 8.5 / NTS`, so you do not need to keep editing variables.
 - It avoids `--enable-swoole-thread`, because that feature requires a ZTS build and does not belong in an NTS workflow.
+- It bypasses the extension action's source auto-detection, which was the thing causing the earlier `config.w32` failures.
 
 ## Important notes
 
