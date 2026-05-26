@@ -83,8 +83,9 @@ jobs:
         shell: pwsh
         working-directory: .\swoole-src
         run: |
-          .\.github\workflows\winext\devpack_master.ps1 `
+          .\.github\workflows\winext\devpack.ps1 `
             -ToolsPath $env:TOOLS_PATH `
+            -PhpVer $env:PHP_VERSION `
             -PhpTs $false `
             -PhpArch $env:PHP_ARCH `
             -PhpVCVer vs17
