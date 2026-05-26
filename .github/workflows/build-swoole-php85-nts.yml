@@ -19,10 +19,10 @@ jobs:
     name: Build php_swoole.dll
     runs-on: windows-2022
     steps:
-      - name: Clone Swoole win32-ci source
+      - name: Clone Swoole win32-event source
         shell: pwsh
         run: |
-          git clone --depth 1 --branch win32-ci https://github.com/swoole/swoole-src.git swoole-src
+          git clone --depth 1 --branch win32-event https://github.com/swoole/swoole-src.git swoole-src
           if (-not (Test-Path ".\swoole-src\config.w32")) {
             throw "config.w32 not found in swoole-src after clone"
           }
