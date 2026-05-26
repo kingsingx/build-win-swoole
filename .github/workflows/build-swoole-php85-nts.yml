@@ -1,4 +1,4 @@
-name: Build Swoole DLL for PHP 8.5 NTS
+name: Build Swoole DLL for PHP 8.4 NTS
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     tags:
-      - "swoole-php85-nts-*"
+      - "swoole-php84-nts-*"
   release:
     types:
       - created
@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-2022
     env:
       TOOLS_PATH: C:\tools\phpdev
-      PHP_VERSION: "8.5"
+      PHP_VERSION: "8.4"
       PHP_TS: "nts"
       PHP_ARCH: "x64"
       SWOOLE_REF: "win32-event"
@@ -54,10 +54,10 @@ jobs:
           $iocp = $iocp -replace '#include "win32/ioutil.h"', "#ifdef __cplusplus`r`nextern `"C`" {`r`n#endif`r`n#include `"win32/ioutil.h`"`r`n#ifdef __cplusplus`r`n}`r`n#endif"
           Set-Content .\src\coroutine\iocp.cc $iocp -Encoding UTF8
 
-      - name: Setup PHP 8.5 NTS
+      - name: Setup PHP 8.4 NTS
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.5"
+          php-version: "8.4"
           coverage: none
           extensions: curl,openssl,pdo
         env:
@@ -69,10 +69,10 @@ jobs:
           path: |
             C:\tools\phpdev\deps
             C:\tools\phpdev\php-*-devel-*-*
-          key: php85-${{ runner.os }}-nts-v1
+          key: php84-${{ runner.os }}-nts-v1
           restore-keys: |
-            php85-${{ runner.os }}-nts-
-            php85-${{ runner.os }}-
+            php84-${{ runner.os }}-nts-
+            php84-${{ runner.os }}-
 
       - name: Prepare php-sdk-binary-tools
         shell: cmd
@@ -136,14 +136,14 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php_swoole-php85-x64-nts
+          name: php_swoole-php84-x64-nts
           path: artifacts/*
 
   release:
     name: Upload release assets
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/swoole-php85-nts-') }}
+    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/swoole-php84-nts-') }}
     steps:
       - name: Upload artifact to the release
         uses: php/php-windows-builder/release@v1
