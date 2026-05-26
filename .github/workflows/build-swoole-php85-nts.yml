@@ -19,17 +19,23 @@ jobs:
     name: Build php_swoole.dll
     runs-on: windows-2022
     steps:
+      - name: Checkout Swoole win32-ci source
+        uses: actions/checkout@v5
+        with:
+          repository: swoole/swoole-src
+          ref: win32-ci
+          path: swoole-src
+
       - name: Build Swoole extension
         uses: php/php-windows-builder/extension@v1
         with:
-          extension-url: https://github.com/swoole/swoole-src
-          extension-ref: win32-ci
           php-version: "8.5"
           arch: x64
           ts: nts
           args: --enable-swoole --enable-swoole-curl
           libs: openssl,libcurl,libssh2,zlib,nghttp2,libzstd,brotli
           run-tests: "false"
+          build-directory: swoole-src
 
   release:
     name: Upload release assets
