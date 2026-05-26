@@ -19,12 +19,13 @@ jobs:
     name: Build php_swoole.dll
     runs-on: windows-2022
     steps:
-      - name: Checkout Swoole win32-ci source
-        uses: actions/checkout@v5
-        with:
-          repository: swoole/swoole-src
-          ref: win32-ci
-          path: swoole-src
+      - name: Clone Swoole win32-ci source
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch win32-ci https://github.com/swoole/swoole-src.git swoole-src
+          if (-not (Test-Path ".\swoole-src\config.w32")) {
+            throw "config.w32 not found in swoole-src after clone"
+          }
 
       - name: Build Swoole extension
         uses: php/php-windows-builder/extension@v1
