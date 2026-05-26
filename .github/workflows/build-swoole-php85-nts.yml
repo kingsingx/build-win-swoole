@@ -1,0 +1,45 @@
+name: Build Swoole DLL for PHP 8.5 NTS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "swoole-php85-nts-*"
+  release:
+    types:
+      - created
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build php_swoole.dll
+    runs-on: windows-2022
+    steps:
+      - name: Build Swoole extension
+        uses: php/php-windows-builder/extension@v1
+        with:
+          extension-url: https://github.com/swoole/swoole-src
+          extension-ref: win32-ci
+          php-version: "8.5"
+          arch: x64
+          ts: nts
+          args: --enable-swoole --enable-swoole-curl
+          libs: openssl,libcurl,libssh2,zlib,nghttp2,libzstd,brotli
+          run-tests: "false"
+
+  release:
+    name: Upload release assets
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/swoole-php85-nts-') }}
+    steps:
+      - name: Upload artifact to the release
+        uses: php/php-windows-builder/release@v1
+        with:
+          release: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: "false"
